@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <div id="container1" style="width: 700px; height: 475px; position: relative;"></div>
+        <script src="/src/js/components/d3/d3.min.js"></script>
+        <script src="/src/js/components/topojson/topojson.js"></script>
+        <script src="/dist/datamaps.usa.js"></script>
+        <script>
+            
+
+            new Datamap({
+                scope: 'usa',
+                element: document.getElementById('container1'),
+                geographyConfig: {
+                    popupOnHover: true,
+                    highlightOnHover: true,
+                    highlightFillColor: function(geo) {
+                        return geo['fillColor'] || '#dbdbdb';
+                    },
+                    borderColor: '#444',
+                    borderWidth: 0.5,
+                    popupTemplate: function(geo, data) {
+                        if (!data) { return ['<div class="hoverinfo">',
+                            '<strong>', geo.properties.name, '</strong>',
+                            '<br>Confirmed Count: <strong>', 'N/A', '</strong>',
+                            '</div>'].join('');; }
+                        
+                        return ['<div class="hoverinfo">',
+                            '<strong>', geo.properties.name, '</strong>',
+                            '<br>Confirmed Count: <strong>', data.confirmed, '</strong>',
+                            '</div>'].join('');
+                    }
+                },
+                fills: {
+                    defaultFill: '#dbdbdb',
+                },
+            });
+        </script>
+    </body>
+</html>
