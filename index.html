@@ -6,35 +6,81 @@
         <script src="/src/js/components/topojson/topojson.js"></script>
         <script src="/dist/datamaps.usa.js"></script>
         <script>
-            
+            const data_file = 'data.json';
 
-            new Datamap({
-                scope: 'usa',
-                element: document.getElementById('container1'),
-                geographyConfig: {
-                    popupOnHover: true,
-                    highlightOnHover: true,
-                    highlightFillColor: function(geo) {
-                        return geo['fillColor'] || '#dbdbdb';
-                    },
-                    borderColor: '#444',
-                    borderWidth: 0.5,
-                    popupTemplate: function(geo, data) {
-                        if (!data) { return ['<div class="hoverinfo">',
-                            '<strong>', geo.properties.name, '</strong>',
-                            '<br>Confirmed Count: <strong>', 'N/A', '</strong>',
-                            '</div>'].join('');; }
-                        
-                        return ['<div class="hoverinfo">',
-                            '<strong>', geo.properties.name, '</strong>',
-                            '<br>Confirmed Count: <strong>', data.confirmed, '</strong>',
-                            '</div>'].join('');
+            function loadJson(callback) {
+                var xobj = new XMLHttpRequest();
+                xobj.overrideMimeType('application/json');
+                xobj.open('GET', data_file, true);
+                xobj.onreadystatechange = function() {
+                    if(xobj.readyState == 4 && xobj.status == '200') {
+                        callback(xobj.responseText);
                     }
-                },
-                fills: {
-                    defaultFill: '#dbdbdb',
-                },
+                }
+                xobj.send(null);
+            }
+
+            function zip(arrays) {
+                return arrays[0].map(function(_,i){
+                    return arrays.map(function(array){return array[i]})
+                });
+            }
+            
+            loadJson(function(response) {
+                var data = JSON.parse(response);
+                var dataValues = zip(data).slice(1);
+                var confirmedValues = dataValues[0];
+                var deathValues = dataValues[1];
+                var recoveredValues = dataValues[2];
+                var dataset = {};
+        
+                var minValue = Math.min.apply(null, confirmedValues);
+                var maxValue = Math.max.apply(null, confirmedValues);
+
+                var paletteScale = d3.scale.linear()
+                    .domain([minValue,maxValue])
+                    .range(["#fcf0f0","#7a0000"]); // red color
+
+                // expected item format => [state, confirmed, deaths, recovered]
+                data.forEach(function(item) {
+                    var state = item[0];
+                    var confirmedValue = item[1];
+                    var deathsValue = item[2];
+                    var recoveredValue = item[3];
+                    dataset[state] = { confirmed: confirmedValue, fillColor: paletteScale(confirmedValue) };
+                });
+
+                new Datamap({
+                    scope: 'usa',
+                    element: document.getElementById('container1'),
+                    geographyConfig: {
+                        popupOnHover: true,
+                        highlightOnHover: true,
+                        highlightFillColor: function(geo) {
+                            return geo['fillColor'] || '#dbdbdb';
+                        },
+                        borderColor: '#444',
+                        borderWidth: 0.5,
+                        popupTemplate: function(geo, data) {
+                            if (!data) { return ['<div class="hoverinfo">',
+                                '<strong>', geo.properties.name, '</strong>',
+                                '<br>Confirmed Count: <strong>', 'N/A', '</strong>',
+                                '</div>'].join('');; }
+                            
+                            return ['<div class="hoverinfo">',
+                                '<strong>', geo.properties.name, '</strong>',
+                                '<br>Confirmed Count: <strong>', data.confirmed, '</strong>',
+                                '</div>'].join('');
+                        }
+                    },
+                    fills: {
+                        defaultFill: '#dbdbdb',
+                    },
+                    data: dataset,
+                });
             });
+            
+            
         </script>
     </body>
 </html>
