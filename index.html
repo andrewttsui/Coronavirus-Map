@@ -1,106 +1,20 @@
 <!DOCTYPE html>
 <html>
     <body>
-        <div id="container1" style="position: relative; width: 500px; height: 600px;"></div>
-        <button class="button" data-zoom="Confirmed Cases">Confirmed Cases</button>
-        <button class="button" data-zoom="Deaths">Deaths</button>
-        <button class="button" data-zoom="Recovered">Recovered</button>
         <script src="/src/js/components/d3/d3.min.js"></script>
         <script src="/src/js/components/topojson/topojson.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
         <script src="/dist/datamaps.usa.js"></script>
-        <script>
-            const data_file = 'data.json';
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js"></script>
+        <script src="/src/js/script.js"></script>
 
-            function loadJson(callback) {
-                var xobj = new XMLHttpRequest();
-                xobj.overrideMimeType('application/json');
-                xobj.open('GET', data_file, true);
-                xobj.onreadystatechange = function() {
-                    if(xobj.readyState == 4 && xobj.status == '200') {
-                        callback(xobj.responseText);
-                    }
-                }
-                xobj.send(null);
-            }
-
-            function zip(arrays) {
-                return arrays[0].map(function(_,i){
-                    return arrays.map(function(array){return array[i]})
-                });
-            }
-
-            function filter_array(arr) {
-                var index = -1,
-                    arr_length = arr ? arr.length : 0,
-                    resIndex = -1,
-                    result = [];
-
-                while (++index < arr_length) {
-                    var value = arr[index];
-
-                    if (value != null) {
-                        result[++resIndex] = value;
-                    }
-                }
-
-                return result;
-            }
-            
-            loadJson(function(response) {
-                var data = JSON.parse(response);
-                var dataValues = zip(data).slice(1);
-                var confirmedValues = filter_array(dataValues[0]);
-                var deathValues = filter_array(dataValues[1]);
-                var recoveredValues = filter_array(dataValues[2]);
-                var dataset = {};
+        <h1 id="map-title"></h1>
+        <div id="confirmed" style="position: relative; width: 750px; height: 500px;"></div>
+        <div id="deaths" style="position: relative; width: 750px; height: 500px;"></div>
+        <div id="recovered" style="position: relative; width: 750px; height: 500px;"></div>
+        <button onClick="showMap('confirmed')">Confirmed Cases</button>
+        <button onClick="showMap('deaths')">Deaths</button>
+        <button onClick="showMap('recovered')">Recovered</button>
         
-                var minValue = Math.min.apply(null, deathValues);
-                var maxValue = Math.max.apply(null, deathValues);
-
-                var paletteScale = d3.scale.linear()
-                    .domain([minValue,maxValue])
-                    .range(["#fcf0f0","#7a0000"]); // red color
-
-                // expected item format => [state, confirmed, deaths, recovered]
-                data.forEach(function(item) {
-                    var state = item[0];
-                    var confirmedValue = item[1];
-                    var deathsValue = item[2];
-                    var recoveredValue = item[3];
-                    dataset[state] = { confirmed: confirmedValue, deaths: deathsValue, recovered: recoveredValue, fillColor: paletteScale(recoveredValue) };
-                });
-
-                new Datamap({
-                    scope: 'usa',
-                    element: document.getElementById('container1'),
-                    geographyConfig: {
-                        popupOnHover: true,
-                        highlightOnHover: true,
-                        highlightFillColor: function(geo) {
-                            return geo['fillColor'] || '#dbdbdb';
-                        },
-                        borderColor: '#444',
-                        borderWidth: 0.5,
-                        popupTemplate: function(geo, data) {
-                            if (!data) { return ['<div class="hoverinfo">',
-                                '<strong>', geo.properties.name, '</strong>',
-                                '<br>Confirmed Count: <strong>', 'N/A', '</strong>',
-                                '</div>'].join('');; }
-                            
-                            return ['<div class="hoverinfo">',
-                                '<strong>', geo.properties.name, '</strong>',
-                                '<br>Confirmed Count: <strong>', data.deaths, '</strong>',
-                                '</div>'].join('');
-                        }
-                    },
-                    fills: {
-                        defaultFill: '#dbdbdb',
-                    },
-                    data: dataset,
-                });
-            });
-            
-            
-        </script>
     </body>
 </html>
