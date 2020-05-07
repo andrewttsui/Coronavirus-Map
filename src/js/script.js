@@ -45,13 +45,21 @@ function showMap(mode) {
     }
 }
 
+function prettyPrintDate(date) {
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+    var dateValue = date.split('T')[0].split('-');
+    var timeValue = date.split('T')[1].replace('Z', ' UTC');
+    var prettyPrint = months[dateValue[1]-1] + ' ' + dateValue[2] + ', ' + dateValue[0] + ' ' + timeValue;
+    return prettyPrint;
+}
+
 function preload() {
     rawData = loadJSON('https://covidtracking.com/api/v1/states/current.json');
 }
 
 function loadData() {
     Object.values(rawData).forEach(function(value) {
-        var info = [value.state, value.positive, value.death, value.recovered];
+        var info = [value.state, value.positive, value.death, value.recovered, value.dateModified];
         data.push(info);
     });
 
@@ -81,7 +89,8 @@ function draw() {
     data.forEach(function(item) {
         var state = item[0];
         var confirmedValue = item[1];
-        confirmedDataset[state] = {confirmed: confirmedValue, fillColor: confirmedValue ? paletteScale(confirmedValue) : "#c2c2c2" };
+        var date = prettyPrintDate(item[4]);
+        confirmedDataset[state] = {confirmed: confirmedValue, dateModified: date, fillColor: confirmedValue ? paletteScale(confirmedValue) : "#c2c2c2" };
     });
     
     var confirmedMap = new Datamap({
@@ -98,12 +107,12 @@ function draw() {
             popupTemplate: function(geo, data) {
                 if (!data.confirmed) { return ['<div class="hoverinfo">',
                     '<strong>', geo.properties.name, '</strong>',
-                    '<br>Confirmed Count: <strong>', 'N/A', '</strong>',
+                    '<br>Confirmed Count: ', 'N/A', '<br>Last Updated: ', data.dateModified,
                     '</div>'].join(''); }
                 
                 return ['<div class="hoverinfo">',
                     '<strong>', geo.properties.name, '</strong>',
-                    '<br>Confirmed Count: <strong>', data.confirmed, '</strong>',
+                    '<br>Confirmed Count: ', data.confirmed, '<br>Last Updated: ', data.dateModified,
                     '</div>'].join('');
             }
         },
@@ -124,7 +133,8 @@ function draw() {
     data.forEach(function(item) {
         var state = item[0];
         var deathsValue = item[2];
-        deathsDataset[state] = {deaths: deathsValue, fillColor: deathsValue ? paletteScale(deathsValue) : "#c2c2c2"};
+        var date = prettyPrintDate(item[4]);
+        deathsDataset[state] = {deaths: deathsValue, dateModified: date, fillColor: deathsValue ? paletteScale(deathsValue) : "#c2c2c2"};
     });
 
     var deathMap = new Datamap({
@@ -141,12 +151,12 @@ function draw() {
             popupTemplate: function(geo, data) {
                 if (!data.deaths) { return ['<div class="hoverinfo">',
                     '<strong>', geo.properties.name, '</strong>',
-                    '<br>Deaths: <strong>', 'N/A', '</strong>',
+                    '<br>Deaths: ', 'N/A', '<br>Last Updated: ', data.dateModified,
                     '</div>'].join('');}
                 
                 return ['<div class="hoverinfo">',
                     '<strong>', geo.properties.name, '</strong>',
-                    '<br>Deaths: <strong>', data.deaths, '</strong>',
+                    '<br>Deaths: ', data.deaths, '<br>Last Updated: ', data.dateModified,
                     '</div>'].join('');
             }
         },
@@ -167,8 +177,8 @@ function draw() {
     data.forEach(function(item) {
         var state = item[0];
         var recoveredValue = item[3];
-        console.log(recoveredValue);
-        recoveredDataset[state] = {recovered: recoveredValue, fillColor: recoveredValue ? paletteScale(recoveredValue) : "#c2c2c2"};
+        var date = prettyPrintDate(item[4]);
+        recoveredDataset[state] = {recovered: recoveredValue, dateModified: date, fillColor: recoveredValue ? paletteScale(recoveredValue) : "#c2c2c2"};
     });
 
     var recoveredMap = new Datamap({
@@ -185,12 +195,12 @@ function draw() {
             popupTemplate: function(geo, data) {
                 if (!data.recovered) { return ['<div class="hoverinfo">',
                     '<strong>', geo.properties.name, '</strong>',
-                    '<br>Recovered: <strong>', 'N/A', '</strong>',
+                    '<br>Recovered: ', 'N/A', '<br>Last Updated: ', data.dateModified,
                     '</div>'].join('');}
                 
                 return ['<div class="hoverinfo">',
                     '<strong>', geo.properties.name, '</strong>',
-                    '<br>Recovered: <strong>', data.recovered, '</strong>',
+                    '<br>Recovered: ', data.recovered, '<br>Last Updated: ', data.dateModified,
                     '</div>'].join('');
             }
         },
